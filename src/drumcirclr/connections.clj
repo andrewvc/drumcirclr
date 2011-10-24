@@ -15,27 +15,31 @@
 (def broadcast (permanent-channel))
 (defn connected-count [] (count @conns))
 
+(receive-all broadcast
+             (fn [m] (log/info (format "Broadcast: %s" m))))
+
 (defn bpm->interval [bpm]
   (long (* (/ 60 bpm) 1000)))
 
 (def bpm 120)
 (def current-beat (agent 1))
+
 (defn metronome-tick []
   (cond
     (> (connected-count) 0)
     (send current-beat
       (fn [i]
-        (enqueue broadcast
-          (cond
-            (= i 1)
+        (cond
+          (= i 1)
             (dosync
               (ref-set next-measure (ensure next-next-measure)))
-            (= i 2)
-            (encode-json->string
-              {:cmd "setAllSamples"
-               :bpm bpm
-               :beat i
-               :samples @next-measure})))
+          (= i 2)
+            (enqueue broadcast
+              (encode-json->string
+                {:cmd "setAllSamples"
+                 :bpm bpm
+                 :beat i
+                 :samples @next-measure})))
         (cond (= 4 i) 1
               :else   (inc i))))))
 
