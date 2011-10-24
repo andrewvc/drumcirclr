@@ -14,16 +14,15 @@
 (def next-next-measure (ref {}))
 (def broadcast (permanent-channel))
 (defn connected-count [] (count @conns))
+(def bpm 120)
+(def current-beat (agent 1))
 
 ; Dump this all to the console for logging
 (receive-all broadcast
-             (fn [m] (log/info (format "Broadcast: %s" m))))
+             (fn [m] (log/debug (format "Broadcast: %s" m))))
 
 (defn bpm->interval [bpm]
   (long (* (/ 60 bpm) 1000)))
-
-(def bpm 120)
-(def current-beat (agent 1))
 
 (defn broadcast-beat
   "Sends the current beat info to broadcast"
