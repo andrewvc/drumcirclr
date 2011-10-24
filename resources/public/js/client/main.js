@@ -22,4 +22,7 @@ dc.init = function () {
             // other options here..
         });
     });
+
+    dc.io = new Worker('js/client/io.js');
+    dc.io.postMessage('init');
 }

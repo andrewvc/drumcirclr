@@ -30,17 +30,8 @@
           };
           var log = dc.log;
 
-          dc.sock = new WebSocket("ws://127.0.0.1:3001/connect");
-          dc.sock.onopen = function () {
-            log.info("Socket open")
-          };
-          dc.sock.onerror = function (msg) {
-            log.warn("Socket error: " + msg);
-          };
-          dc.sock.onclose = function (msg) {
-            log.info("Socket closed: " + msg);
-          };
-          dc.sock.onmessage = function (msg) {
+
+          dc.io.onmessage = function (msg) {
             dc.testSound.play();
             log.info("Rx: " + msg.data);
           }
@@ -65,13 +56,13 @@
             e.preventDefault();
             var cmd = $('#command').val();
             log.info("Tx: " + cmd);
-            dc.sock.send(cmd);
           })
 
           $('body').keydown(function(event) {
             if (event.keyCode === 32) {
                 event.preventDefault();
-                dc.sock.send('test');
+                dc.io.postMessage('test');
+                dc.testSound.play();
             }
           });
 
