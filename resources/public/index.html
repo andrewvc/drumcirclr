@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
     <title>Socket Debugger</title>
@@ -5,67 +6,25 @@
     <script type="text/javascript" src="js/soundmanager/script/soundmanager2.js"></script>
     <script type="text/javascript" src="js/client/main.js"></script>
     <script type="text/javascript">
-        // Initialize drumcirclr main client library & sound support 
-        dc.init();
 
         $(function () {
-          dc.logTarget = $('#log');
-          dc.logMessage = function (level,msg) {
-            dc.logTarget.append("<div class='debug-log " + level + "'>" + msg + "</div>")
 
-          };
-          dc.log = {
-            debug: function (msg) {
-              dc.logMessage("debug", msg);
-            },
-            info: function (msg) {
-              dc.logMessage("info", msg);
-            },
-            warn: function (msg) {
-              dc.logMessage("info", msg);
-            },
-            fatal: function (msg) {
-              dc.logMessage("info", msg);
-            }
-          };
-          var log = dc.log;
+            // Initialize drumcirclr main client library & sound support 
+            dc.init();
 
+            $('#command-input').submit(function (e) {
+                e.preventDefault();
+                var cmd = $('#command').val();
+                log.info("Tx: " + cmd);
+            })
 
-          dc.io.onmessage = function (msg) {
-            dc.testSound.play();
-            log.info("Rx: " + msg.data);
-          }
-
-          dc.login = function (token, succCallback, errCallback) {
-            log.info("Logging in with token: " + token);
-            $.post("/login", {token: token}).success(function (data) {
-                log.info("Successfully logged in!")
-                if (typeof(succCallback) != "undefined") {
-                  succCallback();
+            $('body').keydown(function(event) {
+                if (event.keyCode === 32) {
+                    event.preventDefault();
+                    dc.io.postMessage('{"cmd": "play", "sound": "snare"}');
+                    dc.testSound.play();
                 }
-            }).error(function (data) {
-              log.info("Error logging in: " + data);
-              console.log(data);
-              if (typeof(errCallback) != "undefined") {
-                errCallback();
-              }
             });
-          }
-
-          $('#command-input').submit(function (e) {
-            e.preventDefault();
-            var cmd = $('#command').val();
-            log.info("Tx: " + cmd);
-          })
-
-          $('body').keydown(function(event) {
-            if (event.keyCode === 32) {
-                event.preventDefault();
-                dc.io.postMessage('test');
-                dc.testSound.play();
-            }
-          });
-
         });
     </script>
 </head>
