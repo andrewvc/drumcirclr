@@ -17,7 +17,8 @@ self.onmessage = function(event) {
     socket.send(event.data);
 }
 
-socket.onopen = function () {
+socket.onopen = function (event) {
+  self.postMessage({evt: 'open'});
 };
 socket.onerror = function (msg) {
 };
@@ -26,5 +27,5 @@ socket.onclose = function (msg) {
 
 // Proxy messages from server back to main page 
 socket.onmessage = function (msg) {
-    self.postMessage(msg.data);
+    self.postMessage({evt: 'message', data: msg.data});
 }
