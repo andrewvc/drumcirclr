@@ -52,7 +52,8 @@
                  :date   (str (.getTime (Calendar/getInstance)))
                  :msg-count (.get connections/msg-count)
                  :timestamp (System/currentTimeMillis)
-                 :connections (connections/connected-count)}))
+                 :connections (connections/connected-count)
+                 :next-measure @connections/next-measure}))
 
 (defn handle-connect
   "Handle client websocket connection"
