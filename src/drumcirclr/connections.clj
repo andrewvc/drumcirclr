@@ -24,23 +24,30 @@
 (def bpm 120)
 (def current-beat (agent 1))
 
+(defn broadcast-beat
+  "Sends the current beat info to broadcast"
+  []
+  (enqueue broadcast
+              (encode-json->string
+                {:cmd "setAllSamples"
+                 :bpm bpm
+                 :beat @current-beat
+                 :samples @next-measure})))
+
+(defn shift-measures
+  "Copies next-next-measure into next-measure"
+  []
+  (dosync (ref-set next-measure (ensure next-next-measure))))
+
 (defn metronome-tick []
   (cond
     (> (connected-count) 0)
     (send current-beat
       (fn [i]
         (cond
-          (= i 1)
-            (dosync
-              (ref-set next-measure (ensure next-next-measure)))
-          (= i 2)
-            (enqueue broadcast
-              (encode-json->string
-                {:cmd "setAllSamples"
-                 :bpm bpm
-                 :beat i
-                 :samples @next-measure})))
-        (cond (= 4 i) 1
+          (= i 1) (shift-measures)
+          (= i 2) (broadcast-beat))
+          (cond (= 4 i) 1
               :else   (inc i))))))
 
 (def metronome (.schedule (Timer.)
