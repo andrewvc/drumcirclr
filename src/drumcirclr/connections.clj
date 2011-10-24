@@ -1,12 +1,13 @@
 (ns drumcirclr.connections
-  (:import java.util.UUID)
+  (:import java.util.UUID
+           java.util.concurrent.atomic.AtomicInteger)
   (:use lamina.core
         aleph.formats)
   (:require [clojure.contrib.logging :as log]))
 
 ; Connections mapped by UUID
 (def conns (ref {}))
-(def msg-count (atom 0))
+(def msg-count (AtomicInteger.))
 
 (def broadcast (permanent-channel))
 
@@ -17,6 +18,7 @@
   [{:keys [id ch]}]
   (receive-all ch
     (fn [raw-msg]
+      (.getAndIncrement msg-count)
       (try
         (let [msg (decode-json raw-msg)
               {cmd :cmd}       msg

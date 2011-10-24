@@ -50,7 +50,7 @@
   []
   (respond-json {:status "OK"
                  :date   (str (.getTime (Calendar/getInstance)))
-                 :msg-count @connections/msg-count
+                 :msg-count (.get connections/msg-count)
                  :timestamp (System/currentTimeMillis)
                  :connections (connections/connected-count)}))
 
