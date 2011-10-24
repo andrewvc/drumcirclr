@@ -1,0 +1,81 @@
+<html>
+<head>
+    <title>Socket Debugger</title>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+    <script type="text/javascript">
+        dc = {}; // Code-name for the live app
+        $(function () {
+          dc.logTarget = $('#log');
+          dc.logMessage = function (level,msg) {
+            dc.logTarget.append("<div class='debug-log " + level + "'>" + msg + "</div>")
+
+          };
+          dc.log = {
+            debug: function (msg) {
+              dc.logMessage("debug", msg);
+            },
+            info: function (msg) {
+              dc.logMessage("info", msg);
+            },
+            warn: function (msg) {
+              dc.logMessage("info", msg);
+            },
+            fatal: function (msg) {
+              dc.logMessage("info", msg);
+            }
+          };
+          var log = dc.log;
+
+          dc.sock = new WebSocket("ws://127.0.0.1:3001/connect");
+          dc.sock.onopen = function () {
+            log.info("Socket open")
+          };
+          dc.sock.onerror = function (msg) {
+            log.warn("Socket error: " + msg);
+          };
+          dc.sock.onclose = function (msg) {
+            log.info("Socket closed: " + msg);
+          };
+          dc.sock.onmessage = function (msg) {
+            log.info("Rx: " + msg.data);
+          }
+
+          dc.login = function (token, succCallback, errCallback) {
+            log.info("Logging in with token: " + token);
+            $.post("/login", {token: token}).success(function (data) {
+                log.info("Successfully logged in!")
+                if (typeof(succCallback) != "undefined") {
+                  succCallback();
+                }
+            }).error(function (data) {
+              log.info("Error logging in: " + data);
+              console.log(data);
+              if (typeof(errCallback) != "undefined") {
+                errCallback();
+              }
+            });
+          }
+
+          $('#command-input').submit(function (e) {
+            e.preventDefault();
+            var cmd = $('#command').val();
+            log.info("Tx: " + cmd);
+            dc.sock.send(cmd);
+          })
+
+        });
+    </script>
+</head>
+<body>
+  <h2><strong style="color: #5FFB17">dc</strong> Debug Log</h2>
+  <div id="log" style="height: 220px; width:400px; overflow: scroll; border: 1px solid silver;"></div>
+  <div style="border-top: 1px solid silver; margin: 7px 0px; padding: 7px 0px;">
+      <form id="command-input">
+          <strong>Command Input</strong>
+          <br>
+          <input type="text" id="command">
+          <input type="submit">
+      </form>
+  </div>
+</body>
+</html>
