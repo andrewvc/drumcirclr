@@ -15,7 +15,11 @@ dc.init = function () {
     * iPad/iPhone and devices without flash installed will always attempt to use it.
     */
     soundManager.onready(function() {
-    // Ready to use; soundManager.createSound() etc. can now be called.
+        dc.testSound = soundManager.createSound({
+            id: 'testSound',
+            url: '/sounds/amen_snare.mp3'
+            // onload: myOnloadHandler,
+            // other options here..
+        });
     });
-    
 }

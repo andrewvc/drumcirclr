@@ -41,6 +41,7 @@
             log.info("Socket closed: " + msg);
           };
           dc.sock.onmessage = function (msg) {
+            dc.testSound.play();
             log.info("Rx: " + msg.data);
           }
 
@@ -67,6 +68,13 @@
             dc.sock.send(cmd);
           })
 
+          $('body').keydown(function(event) {
+            if (event.keyCode === 32) {
+                event.preventDefault();
+                dc.sock.send('test');
+            }
+          });
+
         });
     </script>
 </head>
@@ -81,12 +89,7 @@
           <input type="submit">
       </form>
 
-      <form id="login" onsubmit="dc.login($('#login .token').val()); return false;">
-        <strong>Login with token</strong>
-        <br>
-        <input type="text" class="token">
-        <input type="submit">
-      </form>
+      <h2>Press spacebar to play a snare</h2>
   </div>
 </body>
 </html>
