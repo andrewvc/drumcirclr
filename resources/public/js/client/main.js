@@ -43,10 +43,8 @@ dc.init = function () {
     };
     var log = dc.log;
     dc.userId = null;
-
     dc.io = new Worker('js/client/io.js');
-    dc.io.postMessage('{"cmd":"get-user-id"}');
-    dc.io.onmessage = function (msg) {
+    dc.io.onmessage = function (msgRaw) {
         var msg = JSON.parse(msgRaw.data);
         if (msg.cmd === "play") {
             if (msg["user-id"] !== dc.userId) {
@@ -57,6 +55,5 @@ dc.init = function () {
         }
         log.info("Rx: " + msgRaw.data);
     }
-);
-
+    dc.io.postMessage('{"cmd":"get-user-id"}');
 }

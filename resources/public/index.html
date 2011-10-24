@@ -15,7 +15,7 @@
             $('#command-input').submit(function (e) {
                 e.preventDefault();
                 var cmd = $('#command').val();
-                log.info("Tx: " + cmd);
+                dc.log.info("Tx: " + cmd);
             })
 
             $('body').keydown(function(event) {

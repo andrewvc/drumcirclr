@@ -1,23 +1,12 @@
 var socket = new WebSocket("ws://127.0.0.1:3001/connect");
 
+
 // Maximum time to establish connection, in s 
 var CONNECT_TIMEOUT = 5;
 
 // Proxy data upstream to server via WebSocket
 self.onmessage = function(event) {
     if (socket.readyState !== WebSocket.OPEN) {
-        if (socket.readyState === WebSocket.CONNECTING) {
-            // still connecting, spin/wait
-            var current = +(new Date);
-            var timeout = 5 + current;
-            while(socket.readyState === WebSocket.CONNECTING) {
-                current = +(new Date);
-                if (current > timeout) {
-                    // TODO: Send timeout error message!
-                }
-            }
-        }
-
         if (socket.readyState === WebSocket.CLOSING || socket.readyState === WebSocket.CLOSED) {
             // TODO: Send invalid connection state error message
             return;
