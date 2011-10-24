@@ -110,7 +110,7 @@
   (log/info (format "Removing connection %s" user-id))
   (dosync
     (alter conns dissoc user-id)
-    (alter next-measure dissoc user-id)))
+    (delete-user-samples user-id)))
 
 (defn add-conn
   "Add a new connection to the global list"
