@@ -31,7 +31,7 @@
           var log = dc.log;
           dc.userId = null;
 
-          dc.sock = new WebSocket("ws://192.168.15.5:3001/connect");
+          dc.sock = new WebSocket("ws://localhost:3001/connect");
           dc.sock.onopen = function () {
             log.info("Socket open")
             dc.sock.send('{"cmd":"get-user-id"}');
