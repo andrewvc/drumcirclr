@@ -8,10 +8,19 @@
 ; Connections mapped by UUID
 (def conns (ref {}))
 (def msg-count (AtomicInteger.))
+(def next-measure (ref {}))
 
 (def broadcast (permanent-channel))
 
 (defn connected-count [] (count @conns))
+
+(defn set-user-samples [user-id new-samples]
+  (dosync
+    (alter next-measure update-in [user-id :samples] (fn [_] new-samples))))
+
+(defn delete-user-samples [user-id]
+  (dosync
+    (alter next-measure dissoc user-id)))
 
 (defn dispatch-messages
   "Handles incoming messages from a conn"
@@ -25,6 +34,8 @@
               tagged-msg       (assoc msg :user-id (str id))]
           (cond (= "play" cmd)
                   (enqueue broadcast (encode-json->string tagged-msg))
+                (= "setSamples" cmd)
+                  (set-user-samples id (:samples msg))
                 (= "get-user-id" cmd)
                   (enqueue ch (encode-json->string {:cmd :set-user-id :user-id (str id)}))
                 :else
@@ -33,10 +44,11 @@
 
 (defn remove-conn
   "Removes a connection from global list"
-  [id]
-  (log/info (format "Removing connection %s" id))
+  [user-id]
+  (log/info (format "Removing connection %s" user-id))
   (dosync
-    (alter conns dissoc id)))
+    (alter conns dissoc user-id)
+    (alter next-measure dissoc user-id)))
 
 (defn add-conn
   "Add a new connection to the global list"
