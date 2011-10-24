@@ -1,6 +1,8 @@
 (ns drumcirclr.connections
   (:import java.util.UUID
-           java.util.concurrent.atomic.AtomicInteger)
+           java.util.concurrent.atomic.AtomicInteger
+           java.util.Timer
+           java.util.TimerTask)
   (:use lamina.core
         aleph.formats)
   (:require [clojure.contrib.logging :as log]))
@@ -9,14 +11,47 @@
 (def conns (ref {}))
 (def msg-count (AtomicInteger.))
 (def next-measure (ref {}))
-
+(def next-next-measure (ref {}))
 (def broadcast (permanent-channel))
-
 (defn connected-count [] (count @conns))
+
+(defn bpm->interval [bpm]
+  (long (* (/ 60 bpm) 1000)))
+
+(def bpm 120)
+(def current-beat (agent 1))
+(defn metronome-tick []
+  (cond
+    (> (connected-count) 0)
+    (send current-beat
+      (fn [i]
+        (enqueue broadcast
+          (cond
+            (= i 1)
+            (dosync
+              (ref-set next-measure (ensure next-next-measure)))
+            (= i 2)
+            (encode-json->string
+              {:cmd "setAllSamples"
+               :bpm bpm
+               :beat i
+               :samples @next-measure})))
+        (cond (= 4 i) 1
+              :else   (inc i))))))
+
+(def metronome (.schedule (Timer.)
+                          (proxy [TimerTask] []
+                            (run [] (metronome-tick)))
+                          (long 0)
+                          (bpm->interval bpm)))
 
 (defn set-user-samples [user-id new-samples]
   (dosync
-    (alter next-measure update-in [user-id :samples] (fn [_] new-samples))))
+    (let [[measure-data ensure-me] (cond (<= @current-beat 2)
+                                     [next-measure next-next-measure]
+                                     :else         [next-next-measure next-measure])]
+          (ensure ensure-me)
+          (alter measure-data update-in [user-id :samples] (fn [_] new-samples)))))
 
 (defn delete-user-samples [user-id]
   (dosync
@@ -40,7 +75,7 @@
                   (enqueue ch (encode-json->string {:cmd :set-user-id :user-id (str id)}))
                 :else
                   (log/warn (format "Unknown message: %s" msg))))
-        (catch Exception e (log/warn (str "Caught msg exception: " e)))))))
+        (catch Exception e (log/warn (str "Caught msg exception: " e)) (.printStackTrace e))))))
 
 (defn remove-conn
   "Removes a connection from global list"
