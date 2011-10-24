@@ -1,10 +1,12 @@
 (ns drumcirclr.connections
   (:import java.util.UUID)
-  (:use lamina.core)
+  (:use lamina.core
+        aleph.formats)
   (:require [clojure.contrib.logging :as log]))
 
 ; Connections mapped by UUID
 (def conns (ref {}))
+(def msg-count (atom 0))
 
 (def broadcast (permanent-channel))
 
@@ -14,8 +16,18 @@
   "Handles incoming messages from a conn"
   [{:keys [id ch]}]
   (receive-all ch
-    (fn [msg]
-      (log/info (format "Client sent message %s" msg)))))
+    (fn [raw-msg]
+      (try
+        (let [msg (decode-json raw-msg)
+              {cmd :cmd}       msg
+              tagged-msg       (assoc msg :user-id (str id))]
+          (cond (= "play" cmd)
+                  (enqueue broadcast (encode-json->string tagged-msg))
+                (= "get-user-id" cmd)
+                  (enqueue ch (encode-json->string {:cmd :set-user-id :user-id (str id)}))
+                :else
+                  (log/warn (format "Unknown message: %s" msg))))
+        (catch Exception e (log/warn (str "Caught msg exception: " e)))))))
 
 (defn remove-conn
   "Removes a connection from global list"
@@ -34,6 +46,5 @@
       (alter conns assoc id conn))
     (on-closed ch #(remove-conn id))
     (dispatch-messages conn)
-    (siphon ch broadcast)
     (siphon broadcast ch)
     conn))

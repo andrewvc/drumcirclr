@@ -29,10 +29,12 @@
             }
           };
           var log = dc.log;
+          dc.userId = null;
 
-          dc.sock = new WebSocket("ws://173.203.198.168:3001/connect");
+          dc.sock = new WebSocket("ws://192.168.15.5:3001/connect");
           dc.sock.onopen = function () {
             log.info("Socket open")
+            dc.sock.send('{"cmd":"get-user-id"}');
           };
           dc.sock.onerror = function (msg) {
             log.warn("Socket error: " + msg);
@@ -40,9 +42,16 @@
           dc.sock.onclose = function (msg) {
             log.info("Socket closed: " + msg);
           };
-          dc.sock.onmessage = function (msg) {
-            dc.testSound.play();
-            log.info("Rx: " + msg.data);
+          dc.sock.onmessage = function (msgRaw) {
+            var msg = JSON.parse(msgRaw.data);
+            if (msg.cmd === "play") {
+              if (msg["user-id"] !== dc.userId) {
+                dc.testSound.play();
+              }
+            } else if (msg.cmd === "set-user-id") {
+              dc.userId = msg["user-id"];
+            }
+            log.info("Rx: " + msgRaw.data);
           }
 
           dc.login = function (token, succCallback, errCallback) {
@@ -71,7 +80,8 @@
           $('body').keydown(function(event) {
             if (event.keyCode === 32) {
                 event.preventDefault();
-                dc.sock.send('test');
+                dc.testSound.play();
+                dc.sock.send('{"cmd": "play", "sound": "snare"}');
             }
           });
 
