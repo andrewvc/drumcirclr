@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
     <title>Socket Debugger</title>
@@ -5,86 +6,25 @@
     <script type="text/javascript" src="js/soundmanager/script/soundmanager2.js"></script>
     <script type="text/javascript" src="js/client/main.js"></script>
     <script type="text/javascript">
-        // Initialize drumcirclr main client library & sound support 
-        dc.init();
 
         $(function () {
-          dc.logTarget = $('#log');
-          dc.logMessage = function (level,msg) {
-            dc.logTarget.append("<div class='debug-log " + level + "'>" + msg + "</div>")
 
-          };
-          dc.log = {
-            debug: function (msg) {
-              dc.logMessage("debug", msg);
-            },
-            info: function (msg) {
-              dc.logMessage("info", msg);
-            },
-            warn: function (msg) {
-              dc.logMessage("info", msg);
-            },
-            fatal: function (msg) {
-              dc.logMessage("info", msg);
-            }
-          };
-          var log = dc.log;
-          dc.userId = null;
+            // Initialize drumcirclr main client library & sound support 
+            dc.init();
 
-          dc.sock = new WebSocket("ws://localhost:3001/connect");
-          dc.sock.onopen = function () {
-            log.info("Socket open")
-            dc.sock.send('{"cmd":"get-user-id"}');
-          };
-          dc.sock.onerror = function (msg) {
-            log.warn("Socket error: " + msg);
-          };
-          dc.sock.onclose = function (msg) {
-            log.info("Socket closed: " + msg);
-          };
-          dc.sock.onmessage = function (msgRaw) {
-            var msg = JSON.parse(msgRaw.data);
-            if (msg.cmd === "play") {
-              if (msg["user-id"] !== dc.userId) {
-                dc.testSound.play();
-              }
-            } else if (msg.cmd === "set-user-id") {
-              dc.userId = msg["user-id"];
-            }
-            log.info("Rx: " + msgRaw.data);
-          }
+            $('#command-input').submit(function (e) {
+                e.preventDefault();
+                var cmd = $('#command').val();
+                dc.log.info("Tx: " + cmd);
+            })
 
-          dc.login = function (token, succCallback, errCallback) {
-            log.info("Logging in with token: " + token);
-            $.post("/login", {token: token}).success(function (data) {
-                log.info("Successfully logged in!")
-                if (typeof(succCallback) != "undefined") {
-                  succCallback();
+            $('body').keydown(function(event) {
+                if (event.keyCode === 32) {
+                    event.preventDefault();
+                    dc.io.postMessage('{"cmd": "play", "sound": "snare"}');
+                    dc.testSound.play();
                 }
-            }).error(function (data) {
-              log.info("Error logging in: " + data);
-              console.log(data);
-              if (typeof(errCallback) != "undefined") {
-                errCallback();
-              }
             });
-          }
-
-          $('#command-input').submit(function (e) {
-            e.preventDefault();
-            var cmd = $('#command').val();
-            log.info("Tx: " + cmd);
-            dc.sock.send(cmd);
-          })
-
-          $('body').keydown(function(event) {
-            if (event.keyCode === 32) {
-                event.preventDefault();
-                dc.testSound.play();
-                dc.sock.send('{"cmd": "play", "sound": "snare"}');
-            }
-          });
-
         });
     </script>
 </head>
