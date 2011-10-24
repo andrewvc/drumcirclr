@@ -57,25 +57,33 @@
   (dosync
     (alter next-measure dissoc user-id)))
 
+(defn route-command
+  "Route a msg based on the command name"
+  [msg]
+  (let [{:keys [cmd user-id]} msg
+        conn (get @conns user-id)]
+    (cond
+      (= "play" cmd)
+        (enqueue broadcast (encode-json->string msg))
+      (= "setSamples" cmd)
+        (set-user-samples user-id (:samples msg))
+      (= "get-user-id" cmd)
+        (enqueue (:ch conn) (encode-json->string {:cmd :set-user-id :user-id (str user-id)}))
+      :else
+        (log/warn (format "Unknown message: %s" msg)))))
+
 (defn dispatch-messages
   "Handles incoming messages from a conn"
   [{:keys [id ch]}]
   (receive-all ch
     (fn [raw-msg]
-      (.getAndIncrement msg-count)
-      (try
-        (let [msg (decode-json raw-msg)
-              {cmd :cmd}       msg
-              tagged-msg       (assoc msg :user-id (str id))]
-          (cond (= "play" cmd)
-                  (enqueue broadcast (encode-json->string tagged-msg))
-                (= "setSamples" cmd)
-                  (set-user-samples id (:samples msg))
-                (= "get-user-id" cmd)
-                  (enqueue ch (encode-json->string {:cmd :set-user-id :user-id (str id)}))
-                :else
-                  (log/warn (format "Unknown message: %s" msg))))
-        (catch Exception e (log/warn (str "Caught msg exception: " e)) (.printStackTrace e))))))
+      (cond
+        (not (nil? raw-msg))
+        (try
+          (.getAndIncrement msg-count)
+          (cond (nil? raw-msg) (log/info "Empty message encountered")
+                :else      (route-command (assoc (decode-json raw-msg) :user-id (str id))))
+          (catch Exception e (log/warn (str "Caught msg exception: " e)) (.printStackTrace e)))))))
 
 (defn remove-conn
   "Removes a connection from global list"
