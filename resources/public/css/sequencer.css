@@ -1,0 +1,36 @@
+
+#sequencer-holder {
+  width: 980px;
+  height: 580px;
+  background: url('/images/micro_carbon.png');
+}
+
+.sequence {
+    height: 120px;
+    margin: 0 10px;
+    padding: 0 10px 0 0;
+    background: #222;
+    border-radius: 12px;
+}
+
+.sequence .note {
+    height: 46px;
+    width: 46px; 
+    margin: 37px 1px 37px 0; 
+    float:right;
+}
+
+.sequence .note.disabled {
+    background: #333;
+}
+
+.sequence .note.enabled {
+    background: #633;
+}
+
+
+.sequence .note.beat4,
+.sequence .note.beat8,
+.sequence .note.beat12 {
+    margin-right: 2px;
+}

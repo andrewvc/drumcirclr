@@ -2,7 +2,10 @@
 <html>
 <head>
     <title>Socket Debugger</title>
+    <link type="text/css" rel="stylesheet" href="css/sequencer.css" />
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+    <script type="text/javascript" src="js/lib/underscore.js"></script>
+    <script type="text/javascript" src="js/lib/backbone.js"></script>
     <script type="text/javascript" src="js/soundmanager/script/soundmanager2.js"></script>
     <script type="text/javascript" src="js/client/main.js"></script>
     <script type="text/javascript">
@@ -28,6 +31,10 @@
     </script>
 </head>
 <body>
+
+  <div id="sequencer-holder">
+  </div>
+
   <h2><strong style="color: #5FFB17">dc</strong> Debug Log</h2>
   <div id="log" style="height: 220px; width:400px; overflow: scroll; border: 1px solid silver;"></div>
   <div style="border-top: 1px solid silver; margin: 7px 0px; padding: 7px 0px;">
