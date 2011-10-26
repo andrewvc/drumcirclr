@@ -31,6 +31,10 @@
     background: #633;
 }
 
+.sequence .note.enabled.playing {
+    background: #363;
+}
+
 
 .sequence .note.beat4,
 .sequence .note.beat8,

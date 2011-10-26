@@ -38,6 +38,20 @@ dc.init = function () {
             // onload: myOnloadHandler,
             // other options here..
         });
+
+        dc.sequences = [];
+        _.each(_.range(0, 1), function() {
+            var sequenceView = new dc.SequenceEditor();
+            dc.sequences.push(sequenceView.getSequence());
+            var sequenceDiv = sequenceView.render().el;
+            $('#sequencer-holder').append(sequenceDiv);
+        });
+
+        dc.Metronome.start();
+        var metronome = new dc.Metronome(240);
+        metronome.listen(function(beat) {
+            _.invoke(dc.sequences, 'play', [beat]);
+        });
     });
 
     dc.logTarget = $('#log');
@@ -78,17 +92,6 @@ dc.init = function () {
             log.info("Rx: " + pm.data);
         }
     }
-
-    _.each(_.range(0, 4), function() {
-        var sequenceView = new dc.SequenceEditor();
-        var sequenceDiv = sequenceView.render().el;
-        $('#sequencer-holder').append(sequenceDiv);
-    });
-
-    dc.Metronome.start();
-    var metronome = new dc.Metronome(120);
-    metronome.listen(function(beat) { console.log(beat); });
-    
 }
 
 /**
@@ -154,7 +157,17 @@ dc.SequenceNote = Backbone.Model.extend({
     },
 
     play: function() {
-        dc.testSound.play();
+        if (this.get("instrument")) {
+            this.set({ playing: true });
+            var that = this;
+            console.log("playing " + this.cid);
+            dc.testSound.play({ onfinish: function() { that.stop(); } });
+        }
+    },
+
+    stop: function() {
+        console.log("stopping " + this.cid);
+        this.set({ playing: false });
     }
 });
 
@@ -174,8 +187,12 @@ dc.Sequence = Backbone.Collection.extend({
         }
     },
 
+    play: function(beat) {
+        this.at(beat - 1).play();
+    },
+
     comparator: function(note) {
-        return chapter.get("beat");
+        return note.get("beat");
     }
 })
 
@@ -223,6 +240,11 @@ dc.SequenceNoteView = Backbone.View.extend({
             $(this.el).removeClass('disabled').addClass('enabled');
         } else {
             $(this.el).removeClass('enabled').addClass('disabled');
+        }
+        if (this.model.get("playing")) {
+            $(this.el).addClass('playing');
+        } else {
+            $(this.el).removeClass('playing');
         }
         return this;
     },
