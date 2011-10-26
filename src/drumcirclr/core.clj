@@ -10,6 +10,7 @@
         ring.middleware.session
         lamina.core)
 	(:require [drumcirclr.connections :as connections]
+            [drumcirclr.sequencer :as sequencer]
             [clojure.contrib.logging :as log]
             [compojure.route :as route]
             [compojure.handler :as handler])
@@ -53,7 +54,7 @@
                  :msg-count (.get connections/msg-count)
                  :timestamp (System/currentTimeMillis)
                  :connections (connections/connected-count)
-                 :next-measure @connections/next-measure}))
+                 :next-measure @sequencer/next-measure}))
 
 (defn handle-connect
   "Handle client websocket connection"
