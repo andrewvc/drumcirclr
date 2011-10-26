@@ -6,18 +6,21 @@
 }
 
 .sequence {
-    height: 120px;
+    height: 64px;
+    width: 760px;
     margin: 0 10px;
-    padding: 0 10px 0 0;
+    padding: 0px 4px;
     background: #222;
-    border-radius: 12px;
+    border-radius: 4px;
 }
 
 .sequence .note {
     height: 46px;
     width: 46px; 
-    margin: 37px 1px 37px 0; 
-    float:right;
+    margin: 9px 1px 9px 0; 
+    float: left;
+    border-radius: 4px;
+    -moz-border-radius: 4px;
 }
 
 .sequence .note.disabled {
@@ -33,4 +36,25 @@
 .sequence .note.beat8,
 .sequence .note.beat12 {
     margin-right: 2px;
+}
+
+.clearfix:after {
+	content: ".";
+	display: block;
+	clear: both;
+	visibility: hidden;
+	line-height: 0;
+	height: 0;
+}
+ 
+.clearfix {
+	display: inline-block;
+}
+ 
+html[xmlns] .clearfix {
+	display: block;
+}
+ 
+* html .clearfix {
+	height: 1%;
 }
