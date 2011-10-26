@@ -16,7 +16,7 @@
   []
   {:bpm bpm
    :beat @current-beat
-   :samples @next-measure})
+   :sequences @next-measure})
 
 (defn shift-measures
   "Copies next-next-measure into next-measure"
@@ -42,15 +42,15 @@
     (long 0)
     (bpm->interval bpm)))
 
-(defn set-user-samples [user-id new-samples]
+(defn set-user-sequences [user-id new-sequences]
   (dosync
     (let [[measure-data ensure-me] (cond (<= @current-beat 2)
                                      [next-measure next-next-measure]
                                      :else         [next-next-measure next-measure])]
           (ensure ensure-me)
-          (alter measure-data update-in [user-id :samples] (fn [_] new-samples)))))
+          (alter measure-data update-in [user-id :sequences] (fn [_] new-sequences)))))
 
-(defn delete-user-samples
+(defn delete-user-sequences
   [user-id]
   (dosync
     (alter next-measure      dissoc user-id)

@@ -52,15 +52,15 @@ dc.init = function () {
         var pm = pmRaw.data;
         console.log(pm.evt);
         if (pm.evt === "open") {
-          dc.io.postMessage('{"cmd":"get-user-id"}');
+          dc.io.postMessage('{"cmd":"getUserId"}');
         } else if (pm.evt === "message") {
             var msg = JSON.parse(pm.data);
             if (msg.cmd === "play") {
-                if (msg["user-id"] !== dc.userId) {
+                if (msg.userId !== dc.userId) {
                     dc.testSound.play();
                 }
-            } else if (msg.cmd === "set-user-id") {
-                dc.userId = msg["user-id"];
+            } else if (msg.cmd === "setUserId") {
+                dc.userId = msg.userId;
             }
             log.info("Rx: " + pm.data);
         }

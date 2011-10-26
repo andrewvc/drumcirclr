@@ -24,7 +24,7 @@
     (= 2 (:beat current-beat))
     (enqueue broadcast
       (encode-json->string
-        (assoc (sequencer/beat-snapshot) :cmd "setAllSamples")))))
+        (assoc (sequencer/beat-snapshot) :cmd "setAllSequences")))))
 
 (sequencer/start-metronome broadcast-beat)
 
@@ -35,10 +35,10 @@
     (cond
       (= "play" cmd)
         (enqueue broadcast (encode-json->string msg))
-      (= "setSamples" cmd)
-        (sequencer/set-user-samples user-id (:samples msg))
-      (= "get-user-id" cmd)
-        (enqueue ch (encode-json->string {:cmd :set-user-id :user-id (str user-id)}))
+      (= "setSequences" cmd)
+        (sequencer/set-user-sequences user-id (:sequences msg))
+      (= "getUserId" cmd)
+        (enqueue ch (encode-json->string {:cmd :setUserId :userId (str user-id)}))
       :else
         (log/warn (format "Unknown message: %s" msg)))))
 
@@ -69,7 +69,7 @@
   (log/info (format "Removing connection %s" user-id))
   (dosync
     (alter conns dissoc user-id)
-    (sequencer/delete-user-samples user-id)))
+    (sequencer/delete-user-sequences user-id)))
 
 (defn add-conn
   "Add a new connection to the global list"
