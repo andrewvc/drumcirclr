@@ -1,28 +1,22 @@
 var socket = new WebSocket("ws://127.0.0.1:3001/connect");
-
-
 // Maximum time to establish connection, in s 
 var CONNECT_TIMEOUT = 5;
 
-// Proxy data upstream to server via WebSocket
-self.onmessage = function(event) {
-    if (socket.readyState !== WebSocket.OPEN) {
-        if (socket.readyState === WebSocket.CLOSING || socket.readyState === WebSocket.CLOSED) {
-            // TODO: Send invalid connection state error message
-            return;
-        }
-    }
+socket.onopen = function (msg) {
+    self.postMessage({evt: 'open'});
 
-    // whew, stuff is working...
-    socket.send(event.data);
+    // Proxy data upstream to server via WebSocket
+    self.onmessage = function(msg) {
+        socket.send(msg.data);
+    }
 }
 
-socket.onopen = function (event) {
-  self.postMessage({evt: 'open'});
-};
 socket.onerror = function (msg) {
+    self.postMessage('{"cmd":"log", "message":"io:socket error"}');
+
 };
 socket.onclose = function (msg) {
+    self.postMessage('{"cmd":"log", "message":"io:socket closed"}');
 };
 
 // Proxy messages from server back to main page 

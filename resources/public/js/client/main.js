@@ -4,6 +4,10 @@
  */
 var dc = dc = dc || {};
 
+dc.canvas;
+dc.stage;
+dc.io;
+
 dc.init = function () {
     soundManager.url = '/js/soundmanager/swf/';
     soundManager.flashVersion = 9; // optional: shiny features (default = 8)
@@ -61,4 +65,84 @@ dc.init = function () {
             log.info("Rx: " + pm.data);
         }
     }
+
+    var sequenceView = new dc.SequenceView();
+    var sequenceDiv = sequenceView.render().el;
+    $('#sequencer-holder').append(sequenceDiv);
 }
+
+dc.SequenceNote = Backbone.Model.extend({
+
+    toggle: function() {
+        this.set({instrument: !this.get("instrument")});
+    },
+
+    play: function() {
+        dc.testSound.play();
+    }
+});
+
+dc.Sequence = Backbone.Collection.extend({
+
+    model: dc.SequenceNote,
+
+    initialize: function() {
+        if (this.models.length !== 16) {
+            // 16 empty beats
+            this.models = _.map(_.range(1, 17), function(beat) {
+                return new dc.SequenceNote({
+                    beat: beat,
+                    instrument: false
+                });
+            });
+        }
+    }
+})
+
+dc.SequenceView = Backbone.View.extend({
+
+    tagName: "div",
+
+    className: "sequence",
+
+    initialize: function() {
+        if (!this.collection) {
+            this.collection = new dc.Sequence();
+        }
+        this.collection.each(this.addNote.bind(this));
+    },
+
+    addNote: function(note) {
+        var view = new dc.SequenceNoteView({ model: note});
+        $(this.el).append(view.render().el);
+    }
+});
+
+dc.SequenceNoteView = Backbone.View.extend({
+
+    tagName: "div",
+
+    className: "note",
+    
+    initialize: function() {
+        this.model.bind('change', this.render, this);
+    },
+
+    events: {
+        "click" : "toggleNote"
+    },
+
+    render: function() {
+        $(this.el).addClass('beat' + this.model.get("beat")); 
+        if (this.model.get("instrument")) {
+            $(this.el).removeClass('disabled').addClass('enabled');
+        } else {
+            $(this.el).removeClass('enabled').addClass('disabled');
+        }
+        return this;
+    },
+
+    toggleNote: function() {
+        this.model.toggle();
+    }
+});
