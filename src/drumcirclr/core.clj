@@ -1,5 +1,5 @@
 (ns drumcirclr.core
-  "The **NEW** *NEW* Boxy realtime service for Vokle"
+  "Drumcirclr Web Server Setup"
 	(:use compojure.core
         ring.middleware.stacktrace
         aleph.formats
