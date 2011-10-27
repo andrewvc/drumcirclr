@@ -1,6 +1,5 @@
 (ns drumcirclr.sequencer
   (:use lamina.core)
-  (:require [drumcirclr.connections :as connections])
   (:import java.util.Timer
            java.util.TimerTask))
 
