@@ -1,4 +1,4 @@
-var socket = new WebSocket("ws://127.0.0.1:3001/connect");
+var socket = new WebSocket("ws://127.0.0.1:3001/connectaoeu");
 // Maximum time to establish connection, in s 
 var CONNECT_TIMEOUT = 5;
 

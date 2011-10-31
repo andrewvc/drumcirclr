@@ -10,11 +10,6 @@ dc.io;
 
 window.requestAnimationFrame = (function(){
     return (
-        window.requestAnimationFrame       ||
-        window.webkitRequestAnimationFrame ||
-        window.mozRequestAnimationFrame    ||
-        window.oRequestAnimationFrame      ||
-        window.msRequestAnimationFrame     ||
         function(callback, element){
             window.setTimeout(callback, 1000 / 60);
         }
@@ -23,10 +18,13 @@ window.requestAnimationFrame = (function(){
 
 dc.init = function () {
     soundManager.url = '/js/soundmanager/swf/';
-    soundManager.flashVersion = 9; // optional: shiny features (default = 8)
+    soundManager.flashVersion = 10; // optional: shiny features (default = 8)
     soundManager.useFlashBlock = false; // optionally, enable when you're ready to dive in
-    soundManager.useHighPerformance = true;
-    soundManager.useFastPolling = true;
+    soundManager.useHighPerformance = false;
+    soundManager.useFastPolling = false;
+    soundManager.useHTML5Audio = false;
+    soundManager.wmode = "opaque";
+    soundManager.useConsole = false;
     /*
     * read up on HTML5 audio support, if you're feeling adventurous.
     * iPad/iPhone and devices without flash installed will always attempt to use it.
@@ -135,7 +133,19 @@ dc.Metronome.prototype = {
     tick: function(currentTimestamp) {
         if (currentTimestamp >= this.nextBeat) {
             this.beat = ~~(((currentTimestamp / 60) * this.bpm) % 16)+1;
-            this.nextBeat = currentTimestamp + (60 / this.bpm);
+            this.nextBeat = currentTimestamp + (60 / this.bpm) - 0.009;
+
+            if (this.beatTimestamp) {
+                var diff = currentTimestamp - this.beatTimestamp;
+                var expectedDiff =  1.0 / (120 / 60 * 2);
+                var relativeDiff = Math.round((diff - expectedDiff) * 10000) / 10000;
+                if (Math.abs(relativeDiff) > 0.008) {
+                  console.log("Timestamp difference: " + relativeDiff);
+                }
+            }
+
+            this.beatTimestamp = currentTimestamp;
+
             for (var i=0; i < this.listeners.length; i++) {
                 this.listeners[i](this.beat);
             }
@@ -157,16 +167,21 @@ dc.SequenceNote = Backbone.Model.extend({
     },
 
     play: function() {
-        if (this.get("instrument")) {
+        if (this.get("instrument") && !this.get("playing")) {
             this.set({ playing: true });
             var that = this;
-            console.log("playing " + this.cid);
-            dc.testSound.play({ onfinish: function() { that.stop(); } });
+            //$('<audio src="/sounds/amen_snare.wav"></audio>')[0].play();
+            var audio = _.last($('.beat' + this.attributes.beat + ' audio'));
+            if (audio.currentTime != 0) { audio.currentTime = 0; }
+            audio.play();
+            //console.log("Now playing " + audio.getAttribute("id"));
+            setTimeout(function () { that.stop(audio); }, 1000);
+            //dc.testSound.play({ onfinish: function() { that.stop(); } });
         }
     },
 
-    stop: function() {
-        console.log("stopping " + this.cid);
+    stop: function(audio) {
+        audio.pause();
         this.set({ playing: false });
     }
 });
@@ -188,7 +203,13 @@ dc.Sequence = Backbone.Collection.extend({
     },
 
     play: function(beat) {
+
         this.at(beat - 1).play();
+        this.lastLastNow = this.lastNow;
+        this.lastNow = this.now;
+        this.now = +(new Date);
+
+        console.log("Playing beat at " + (this.now - this.lastNow - 250) + ' / ' + (this.now - this.lastLastNow - 500));
     },
 
     comparator: function(note) {
@@ -235,7 +256,11 @@ dc.SequenceNoteView = Backbone.View.extend({
     },
 
     render: function() {
-        $(this.el).addClass('beat' + this.model.get("beat")); 
+        var $el = $(this.el)
+        $el.addClass('beat' + this.model.get("beat"));
+        if ($el.find('audio').length === 0) {
+            $(this.el).append('<audio src="http://173.203.198.168/drumcirclr/resources/public/sounds/closed_hi_hat.mp3" id="audio-' + this.model.get("beat") + '"></audio>');
+        }
         if (this.model.get("instrument")) {
             $(this.el).removeClass('disabled').addClass('enabled');
         } else {
